@@ -23,8 +23,10 @@ import os.path
 from gettext import gettext as _
 
 from gi.repository import Gtk
+from gi.repository import GLib
 from gi.repository import GObject
 
+from sugar3 import env
 from sugar3.activity import activity
 from sugar3.graphics import style
 from sugar3.graphics.combobox import ComboBox
@@ -36,10 +38,19 @@ _EXCLUDE_EXTENSIONS = ('.pyc', '.pyo', '.so', '.o', '.a', '.la', '.mo', '~',
                        '.xo', '.tar', '.bz2', '.zip', '.gz')
 _EXCLUDE_NAMES = ['.deps', '.libs']
 
-try:
-    activities_path = os.environ['SUGAR_ACTIVITIES_PATH']
-except KeyError:
-    activities_path = os.path.join(os.path.expanduser("~"), "Activities")
+
+def _find_activities_path():
+    # prioritize home dir but also use system dirs
+    path = env.get_user_activities_path()
+    if not os.path.exists(path):
+        for data_dir in GLib.get_system_data_dirs():
+            path = os.path.join(data_dir, "sugar", "activities")
+            if os.path.exists(path):
+                break
+    return path
+
+
+activities_path = _find_activities_path()
 
 
 class TabLabel(Gtk.HBox):
